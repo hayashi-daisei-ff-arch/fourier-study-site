@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b2332">
+  <meta name="description" content="診療放射線技師国家試験の学習を目的とした，1次元・2次元フーリエ変換のインタラクティブ可視化教材．">
+  <title>Fourier Lab ｜フーリエ変換を見て理解する</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand"><span class="brand-symbol">ƒ</span><span>Fourier<span class="brand-light">Lab</span><small>フーリエ変換 学習シミュレータ</small></span></div>
+      <div class="header-label">DIAGNOSTIC RADIOLOGICAL TECHNOLOGIST · STUDY TOOL</div>
+    </header>
+
+    <section class="intro" aria-label="サイトの説明">
+      <div class="intro-eyebrow"><span class="pulse"></span> INTERACTIVE SIGNAL & IMAGE EXPLORER</div>
+      <h1>動かして，<em>変換の性質</em>を理解する．</h1>
+      <p>信号や画像を操作すると，フーリエスペクトルはどう変わる？<br class="desktop-break">変換前後の4画面を見比べながら，1次元と2次元を学べます．</p>
+      <div class="intro-features"><span>1D / 2D 切替</span><span>リアルタイムFFT</span><span>逆変換</span><span>数式・確認問題</span></div>
+    </section>
+
+    <div class="notice" role="note"><strong>計算上の約束</strong><span>離散フーリエ変換（DFT）をFFTで計算します．1D：256点，2D：128×128画素．<b>信号・画像の範囲は周期的</b>と見なし，標本化や境界の影響が出る場合は注記します．</span></div>
+
+    <nav class="mode-tabs" role="tablist" aria-label="学習する次元">
+      <button id="tab-1" class="mode-tab active" role="tab" aria-selected="true" aria-controls="pane-1" type="button"><span class="tab-icon">∿</span><span>1次元フーリエ変換<small>波形・周波数・基本性質</small></span></button>
+      <button id="tab-2" class="mode-tab" role="tab" aria-selected="false" aria-controls="pane-2" type="button"><span class="tab-icon">▦</span><span>2次元フーリエ変換<small>画像・周波数マスク・k空間</small></span></button>
+    </nav>
+
+    <section id="pane-1" class="mode-pane" role="tabpanel" aria-labelledby="tab-1">
+      <div class="workspace">
+        <aside class="controls" aria-label="1次元の設定">
+          <div class="control-heading"><div><span class="small-tag">01 / INPUT</span><h2>元の信号を選ぶ</h2></div><button type="button" id="reset1" class="subtle-btn">初期化 ↺</button></div>
+          <label for="template1" class="field-label">信号テンプレート f(x)</label>
+          <select id="template1" class="select-field"></select>
+          <div id="param1" class="param-slot"></div>
+          <div class="divider"></div>
+          <div class="control-heading"><div><span class="small-tag">02 / TRANSFORM</span><h2>性質を確かめる</h2></div></div>
+          <label for="operation1" class="field-label">操作の種類</label>
+          <select id="operation1" class="select-field"></select>
+          <div id="opparams1" class="param-slot"></div>
+          <div class="mini-preview" id="auxbox1" hidden><div class="mini-heading">補助信号 h(x) <span>加算・畳み込み等で使用</span></div><canvas id="auxcanvas1" aria-label="補助信号の波形"></canvas></div>
+          <p class="field-hint" id="caution1" aria-live="polite"></p>
+        </aside>
+        <div class="results">
+          <div class="results-topline"><div><span class="small-tag">LIVE OUTPUT</span><h2>変換前後を比較</h2></div><label class="compact-select">スペクトル表示 <select id="specview1"><option value="mag">振幅 |F|/N</option><option value="phase">位相 arg F</option><option value="re">実部 Re(F)/N</option><option value="im">虚部 Im(F)/N</option></select></label></div>
+          <div class="plot-grid">
+            <article class="plot-card"><div class="plot-head"><span class="plot-no">A</span><div><h3>元の信号 <span>f(x)</span></h3><p>位置領域</p></div></div><canvas id="signal1a" class="line-chart" role="img" aria-label="元の信号の波形"></canvas></article>
+            <article class="plot-card modified"><div class="plot-head"><span class="plot-no">B</span><div><h3>操作後の信号 <span>g(x)</span></h3><p>位置領域</p></div></div><canvas id="signal1b" class="line-chart" role="img" aria-label="操作後の信号の波形"></canvas></article>
+            <article class="plot-card"><div class="plot-head"><span class="plot-no">C</span><div><h3>元のスペクトル <span>F(k)</span></h3><p>周波数領域</p></div></div><canvas id="spec1a" class="line-chart" role="img" aria-label="元のフーリエスペクトル"></canvas></article>
+            <article class="plot-card modified"><div class="plot-head"><span class="plot-no">D</span><div><h3>操作後のスペクトル <span>G(k)</span></h3><p>周波数領域</p></div></div><canvas id="spec1b" class="line-chart" role="img" aria-label="操作後のフーリエスペクトル"></canvas></article>
+          </div>
+          <div class="legend-row"><span><i class="legend-line blue"></i>実数部／振幅</span><span><i class="legend-line orange"></i>虚数部（複素信号時）</span><span>周波数軸：中央 k = 0</span></div>
+          <details class="recon-details" id="reconwrap1"><summary>逆フーリエ変換の復元結果を確認 <span class="error-badge" id="err1">誤差 —</span></summary><div class="recon-content"><p>操作後の複素スペクトル G(k) を逆変換して復元した g(x) です．実数部を実線，虚数部を橙線で表示します．</p><canvas id="reconchart1" class="line-chart" role="img" aria-label="1次元の逆変換結果"></canvas></div></details>
+        </div>
+      </div>
+      <div class="learning-grid">
+        <article class="learning-card formula-card"><span class="small-tag">PROPERTY / THEORY</span><h2 id="theory-title1">平行移動の性質</h2><div class="equation" id="theory-formula1"></div><p id="theory-desc1"></p><p class="math-note" id="theory-extra1"></p></article>
+        <article class="learning-card question-card"><span class="small-tag">CHECK YOUR UNDERSTANDING</span><h2>予想してから確認</h2><p id="question1"></p><div id="choices1" class="choices"></div><button type="button" class="primary-btn" id="check1">答え合わせ</button><p class="feedback" id="feedback1" aria-live="polite"></p></article>
+      </div>
+    </section>
+
+    <section id="pane-2" class="mode-pane" role="tabpanel" aria-labelledby="tab-2" hidden>
+      <div class="workspace">
+        <aside class="controls" aria-label="2次元の設定">
+          <div class="control-heading"><div><span class="small-tag">01 / IMAGE</span><h2>元の画像を選ぶ</h2></div><button type="button" id="reset2" class="subtle-btn">初期化 ↺</button></div>
+          <label for="template2" class="field-label">画像テンプレート f(x,y)</label>
+          <select id="template2" class="select-field"></select>
+          <div id="upload-box" class="upload-box" hidden><label for="upload2">画像ファイルを選択（端末内のみで処理）</label><input type="file" id="upload2" accept="image/png,image/jpeg,image/webp,image/bmp"><span id="upload-info">未選択の場合は模擬画像を表示</span></div>
+          <div id="param2" class="param-slot"></div>
+          <div class="divider"></div>
+          <div class="control-heading"><div><span class="small-tag">02 / TRANSFORM</span><h2>画像を操作する</h2></div></div>
+          <label for="operation2" class="field-label">操作の種類</label>
+          <select id="operation2" class="select-field"></select>
+          <div id="opparams2" class="param-slot"></div>
+          <p class="field-hint" id="caution2" aria-live="polite"></p>
+        </aside>
+        <div class="results">
+          <div class="results-topline"><div><span class="small-tag">LIVE OUTPUT</span><h2>画像とスペクトルを比較</h2></div><label class="compact-select">スペクトル表示 <select id="specview2"><option value="mag">振幅（対数）</option><option value="maglinear">振幅（線形）</option><option value="phase">位相</option><option value="re">実部</option><option value="im">虚部</option></select></label></div>
+          <div class="plot-grid image-grid">
+            <article class="plot-card"><div class="plot-head"><span class="plot-no">A</span><div><h3>元の画像 <span>f(x,y)</span></h3><p>位置領域</p></div></div><div class="image-holder"><canvas id="image2a" class="matrix-canvas" width="128" height="128" role="img" aria-label="元の2次元画像"></canvas></div></article>
+            <article class="plot-card modified"><div class="plot-head"><span class="plot-no">B</span><div><h3>操作後の画像 <span>g(x,y)</span></h3><p>位置領域</p></div></div><div class="image-holder"><canvas id="image2b" class="matrix-canvas" width="128" height="128" role="img" aria-label="操作後の2次元画像"></canvas></div></article>
+            <article class="plot-card"><div class="plot-head"><span class="plot-no">C</span><div><h3>元のスペクトル <span>F(u,v)</span></h3><p>周波数領域</p></div></div><div class="image-holder spectrum"><canvas id="spec2a" class="matrix-canvas" width="128" height="128" role="img" aria-label="元画像の2次元スペクトル"></canvas><span class="origin-tag">DC</span></div></article>
+            <article class="plot-card modified"><div class="plot-head"><span class="plot-no">D</span><div><h3>操作後のスペクトル <span>G(u,v)</span></h3><p>周波数領域</p></div></div><div class="image-holder spectrum"><canvas id="spec2b" class="matrix-canvas" width="128" height="128" role="img" aria-label="操作後の2次元スペクトル"></canvas><span class="origin-tag">DC</span></div></article>
+          </div>
+          <div class="legend-row"><span>周波数：中心が直流成分（DC）</span><span>スペクトルは fftshift 表示</span><span id="image-scale-info">画像表示：共通スケール</span></div>
+          <details class="recon-details" id="reconwrap2"><summary>逆フーリエ変換の復元結果を確認 <span class="error-badge" id="err2">誤差 —</span></summary><div class="recon-content"><p>G(u,v) から逆変換で復元した実数部です．変換・逆変換の数値誤差を表示します．</p><div class="recon-image-holder"><canvas id="reconimage2" class="matrix-canvas" width="128" height="128" role="img" aria-label="逆2次元フーリエ変換による復元画像"></canvas></div></div></details>
+        </div>
+      </div>
+      <div class="learning-grid">
+        <article class="learning-card formula-card"><span class="small-tag">PROPERTY / THEORY</span><h2 id="theory-title2"></h2><div class="equation" id="theory-formula2"></div><p id="theory-desc2"></p><p class="math-note" id="theory-extra2"></p></article>
+        <article class="learning-card question-card"><span class="small-tag">CHECK YOUR UNDERSTANDING</span><h2>予想してから確認</h2><p id="question2"></p><div id="choices2" class="choices"></div><button type="button" class="primary-btn" id="check2">答え合わせ</button><p class="feedback" id="feedback2" aria-live="polite"></p></article>
+      </div>
+    </section>
+
+    <section class="foundation" aria-label="知っておきたいポイント">
+      <div><span class="small-tag">REFERENCE</span><h2>フーリエ変換の読み方</h2></div>
+      <div class="foundation-grid"><p><b>振幅</b>：どの周波数成分がどれだけ含まれるか．表示用に1Dは |F|/N に規格化しています．</p><p><b>位相</b>：周波数成分の位置関係を表します．振幅がほぼ0の周波数の位相は表示しません．</p><p><b>偶・奇</b>：実数の偶関数の変換は実数，実数の奇関数の変換は純虚数になります．</p><p><b>畳み込み</b>：位置領域の畳み込みは，周波数領域での複素数の乗算に対応します．</p></div>
+    </section>
+    <footer class="footer"><span>Fourier Lab · ブラウザ内で完結する教育用ツール</span><span>© Educational simulation / FFT (radix-2)</span></footer>
+  </div>
+</body>
+</html>
