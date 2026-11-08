@@ -1,6 +1,12 @@
 import { N2 } from './signals.js';
 const BLUE='#2686b8',ORANGE='#e29459',GRID='#e7eef1',INK='#758c96';
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const phaseTick=(v)=>{
+  if(Math.abs(v)<1e-8)return '0';
+  if(Math.abs(Math.abs(v)-Math.PI)<1e-8)return v>0?'π':'−π';
+  if(Math.abs(Math.abs(v)-Math.PI/2)<1e-8)return v>0?'π/2':'−π/2';
+  return v.toFixed(2);
+};
 
 function setup(canvas) {
   const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -25,7 +31,7 @@ export function drawLine(canvas, series, range=null, isSpec=false, isPhase=false
       const yy=t+ph*j/4;
       ctx.beginPath();ctx.strokeStyle=GRID;ctx.moveTo(l,yy);ctx.lineTo(w-r,yy);ctx.stroke();
       const v=max-(max-min)*j/4;
-      ctx.textAlign='right';ctx.fillText(v===0?'0':Math.abs(v)<.01?v.toExponential(1):v.toFixed(Math.abs(v)<3?2:1),l-5,yy+3);
+      ctx.textAlign='right';ctx.fillText(isPhase?phaseTick(v):(v===0?'0':Math.abs(v)<.01?v.toExponential(1):v.toFixed(Math.abs(v)<3?2:1)),l-5,yy+3);
     }
     for(let j=0;j<=4;j++){
       const xx=l+pw*j/4;
@@ -38,10 +44,34 @@ export function drawLine(canvas, series, range=null, isSpec=false, isPhase=false
   }
   if(min<=0&&max>=0){const y=t+ph*max/(max-min);ctx.strokeStyle='#cadbdf';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+pw,y);ctx.stroke();}
   for(const s of series){
-    ctx.beginPath();ctx.strokeStyle=s.color||BLUE;ctx.lineWidth=compact?1.7:1.9;let drawing=false;
+    const color=s.color||BLUE;
+    if(isPhase){
+      // DFT phase is defined per frequency bin, not a continuous curve. For
+      // pure sinusoids only one or two bins may have non-negligible magnitude.
+      // Drawing line segments through isolated bins produces a blank canvas.
+      const count=Array.from(s.data).filter(Number.isFinite).length;
+      const radius=count<=32?3.8:count<=100?2.7:1.8;
+      const baseline=t+max/(max-min)*ph;
+      if(count<=48){
+        ctx.strokeStyle=color;ctx.lineWidth=1.2;
+        for(let i=0;i<s.data.length;i++){
+          const v=s.data[i];if(!Number.isFinite(v))continue;
+          const x=l+i/Math.max(1,s.data.length-1)*pw,y=t+(max-v)/(max-min)*ph;
+          ctx.beginPath();ctx.moveTo(x,baseline);ctx.lineTo(x,y);ctx.stroke();
+        }
+      }
+      ctx.fillStyle=color;
+      for(let i=0;i<s.data.length;i++){
+        const v=s.data[i];if(!Number.isFinite(v))continue;
+        const x=l+i/Math.max(1,s.data.length-1)*pw,y=t+(max-v)/(max-min)*ph;
+        ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+      }
+      continue;
+    }
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=compact?1.7:1.9;let drawing=false;
     s.data.forEach((v,i)=>{
       if(!Number.isFinite(v)){drawing=false;return;}
-      const x=l+(i/(s.data.length-1))*pw,y=t+(max-v)/(max-min)*ph;
+      const x=l+(i/Math.max(1,s.data.length-1))*pw,y=t+(max-v)/(max-min)*ph;
       if(drawing)ctx.lineTo(x,y);else {ctx.moveTo(x,y);drawing=true;}
     });ctx.stroke();
   }
@@ -113,7 +143,7 @@ export function drawSpectrum2(canvas, spec, kind, maxval, n=N2) {
     const xx=(x+n/2)%n,yy=(y+n/2)%n,i=yy*n+xx,j=y*n+x;
     const re=spec.re[i],im=spec.im[i],mag=Math.hypot(re,im);
     let color;
-    if(kind==='phase')color=mag>maxval*1e-4?phaseColor(Math.atan2(im,re)):[18,35,48];
+    if(kind==='phase')color=mag>Math.max(1e-12,maxval*1e-6)?phaseColor(Math.atan2(im,re)):[18,35,48];
     else if(kind==='re'||kind==='im')color=colorDiverging((kind==='re'?re:im)/maxval);
     else {
       const value=kind==='maglinear'?mag/maxval:Math.log1p(mag)/Math.log1p(maxval);

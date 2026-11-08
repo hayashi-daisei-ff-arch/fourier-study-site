@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0b2332">
   <meta name="description" content="診療放射線技師国家試験の学習を目的とした，1次元・2次元フーリエ変換のインタラクティブ可視化教材．">
   <title>Fourier Lab ｜フーリエ変換を見て理解する</title>
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="js/app.js"></script>
+  <link rel="stylesheet" href="styles.css?v=phase-fix-1">
+  <script type="module" src="js/app.js?v=phase-fix-1"></script>
 </head>
 <body>
   <div class="page">
@@ -47,6 +47,7 @@
         </aside>
         <div class="results">
           <div class="results-topline"><div><span class="small-tag">LIVE OUTPUT</span><h2>変換前後を比較</h2></div><label class="compact-select">スペクトル表示 <select id="specview1"><option value="mag">振幅 |F|/N</option><option value="phase">位相 arg F</option><option value="re">実部 Re(F)/N</option><option value="im">虚部 Im(F)/N</option></select></label></div>
+          <p class="spectrum-hint" id="spec-hint1" hidden>位相は有効な周波数ビンを点で表示します．振幅が極めて小さい成分の位相は非表示です．</p>
           <div class="plot-grid">
             <article class="plot-card"><div class="plot-head"><span class="plot-no">A</span><div><h3>元の信号 <span>f(x)</span></h3><p>位置領域</p></div></div><canvas id="signal1a" class="line-chart" role="img" aria-label="元の信号の波形"></canvas></article>
             <article class="plot-card modified"><div class="plot-head"><span class="plot-no">B</span><div><h3>操作後の信号 <span>g(x)</span></h3><p>位置領域</p></div></div><canvas id="signal1b" class="line-chart" role="img" aria-label="操作後の信号の波形"></canvas></article>
@@ -80,6 +81,7 @@
         </aside>
         <div class="results">
           <div class="results-topline"><div><span class="small-tag">LIVE OUTPUT</span><h2>画像とスペクトルを比較</h2></div><label class="compact-select">スペクトル表示 <select id="specview2"><option value="mag">振幅（対数）</option><option value="maglinear">振幅（線形）</option><option value="phase">位相</option><option value="re">実部</option><option value="im">虚部</option></select></label></div>
+          <p class="spectrum-hint" id="spec-hint2" hidden>色は位相（−π～π）に対応します．暗い部分は振幅が極めて小さく，位相を表示していません．</p>
           <div class="plot-grid image-grid">
             <article class="plot-card"><div class="plot-head"><span class="plot-no">A</span><div><h3>元の画像 <span>f(x,y)</span></h3><p>位置領域</p></div></div><div class="image-holder"><canvas id="image2a" class="matrix-canvas" width="128" height="128" role="img" aria-label="元の2次元画像"></canvas></div></article>
             <article class="plot-card modified"><div class="plot-head"><span class="plot-no">B</span><div><h3>操作後の画像 <span>g(x,y)</span></h3><p>位置領域</p></div></div><div class="image-holder"><canvas id="image2b" class="matrix-canvas" width="128" height="128" role="img" aria-label="操作後の2次元画像"></canvas></div></article>

@@ -1,6 +1,6 @@
 import { N1,N2,templates1,secondary1,operations1,templates2,operations2,default1Param,range1Param,default2Param,range2Param,apply1,apply2,auxiliary1 } from './signals.js';
 import {maxError} from './fft.js';
-import {drawLine,specSeries,spectrumRange,signalRange,imageRange,drawImage,drawSpectrum2,spec2Range} from './plots.js';
+import {drawLine,specSeries,spectrumRange,signalRange,imageRange,drawImage,drawSpectrum2,spec2Range} from './plots.js?v=phase-fix-1';
 
 const $=(id)=>document.getElementById(id);
 const defaults1=()=>({name:'cos',p:8,op:'shift',a:24,b:0,second:'gauss',spec:'mag'});
@@ -173,6 +173,7 @@ function render1(){
   const sr=signalRange(r.f.re,r.g.re,r.g.im);
   drawLine($('signal1a'),[{data:r.f.re,color:'#2686b8'}],sr);
   drawLine($('signal1b'),[{data:r.g.re,color:'#2686b8'},{data:r.g.im,color:'#e29459'}],sr);
+  $('spec-hint1').hidden=s1.spec!=='phase';
   const F=specSeries(r.F,s1.spec,N1), G=specSeries(r.G,s1.spec,N1),range=spectrumRange(F,G,s1.spec);
   drawLine($('spec1a'),[{data:F,color:'#2686b8'}],range,true,s1.spec==='phase');
   drawLine($('spec1b'),[{data:G,color:'#2686b8'}],range,true,s1.spec==='phase');
@@ -186,6 +187,7 @@ function render2(){
   last2=apply2(s2.name,s2.p,s2.op,{a:s2.a,b:s2.b,second:s2.second},s2.uploaded);
   const r=last2,range=imageRange(r.f,r.g);
   drawImage($('image2a'),r.f,range);drawImage($('image2b'),r.g,range);
+  $('spec-hint2').hidden=s2.spec!=='phase';
   const max=spec2Range(r.F,r.G,s2.spec);
   drawSpectrum2($('spec2a'),r.F,s2.spec,max);drawSpectrum2($('spec2b'),r.G,s2.spec,max);
   drawImage($('reconimage2'),r.restored.re,range);
